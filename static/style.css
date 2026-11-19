@@ -1,0 +1,288 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --text: #1c2430;
+  --muted: #61708a;
+  --border: #d9dfe8;
+  --primary: #2f6fed;
+  --primary-text: #ffffff;
+  --danger: #c0392b;
+  --notice: #1d6b3a;
+  --error: #b3261e;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12161d;
+    --panel: #1d2430;
+    --text: #eef2f8;
+    --muted: #9aa8bd;
+    --border: #364152;
+    --primary: #5a90f7;
+    --primary-text: #08111f;
+    --danger: #ff8177;
+    --notice: #7fd6a0;
+    --error: #ff9d95;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+  max-width: 60rem;
+  margin-inline: auto;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.subtitle {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: end;
+  margin: 1.25rem 0;
+  padding: 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.4rem;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: var(--text);
+}
+
+input[type="text"],
+select,
+textarea {
+  min-height: 2.6rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg);
+  color: var(--text);
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  background: var(--panel);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--primary);
+  color: var(--primary-text);
+  border-color: var(--primary);
+  font-weight: 600;
+}
+
+button.danger {
+  color: var(--danger);
+  border-color: var(--border);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.fab {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.22);
+}
+
+.group {
+  margin: 1.5rem 0;
+}
+
+.group h2 {
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+.items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+}
+
+.item-text {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.item-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.item-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.item.is-disabled .item-text {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.item-actions button {
+  min-height: 2.2rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+#message {
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--notice) 12%, transparent);
+  color: var(--notice);
+  border: 1px solid color-mix(in srgb, var(--notice) 40%, transparent);
+}
+
+#message.error,
+.error {
+  color: var(--error);
+}
+
+#message.error {
+  background: color-mix(in srgb, var(--error) 10%, transparent);
+  border-color: color-mix(in srgb, var(--error) 35%, transparent);
+}
+
+.notice {
+  color: var(--notice);
+}
+
+dialog {
+  width: min(32rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 18px 50px rgb(0 0 0 / 0.35);
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+dialog form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+dialog h2 {
+  margin: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 34rem) {
+  .item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .item-actions {
+    width: 100%;
+  }
+
+  .item-actions button {
+    flex: 1;
+  }
+}

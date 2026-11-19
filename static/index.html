@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>__LIST_TITLE__</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-title="__LIST_TITLE__">
+  <header class="topbar">
+    <div>
+      <h1 id="title">__LIST_TITLE__</h1>
+      <p class="subtitle">Shopping as <strong id="username">…</strong></p>
+    </div>
+    <button id="refresh" type="button" class="secondary">Refresh</button>
+  </header>
+
+  <section class="settings" aria-label="View settings">
+    <label>
+      Sort
+      <select id="sort">
+        <option value="created_asc">Oldest first</option>
+        <option value="created_desc">Newest first</option>
+        <option value="name_asc">Name A–Z</option>
+      </select>
+    </label>
+    <label>
+      Category
+      <select id="category-filter">
+        <option value="">All categories</option>
+      </select>
+    </label>
+    <label class="checkbox">
+      <input id="hide-disabled" type="checkbox">
+      Hide disabled
+    </label>
+  </section>
+
+  <main>
+    <p id="message" role="status" aria-live="polite" hidden></p>
+    <div id="groups"></div>
+    <p id="empty" hidden>The list is empty.</p>
+  </main>
+
+  <button id="add-item" type="button" class="primary fab">+ Add item</button>
+
+  <dialog id="item-dialog" aria-labelledby="dialog-title">
+    <form id="item-form">
+      <h2 id="dialog-title">Add item</h2>
+
+      <input id="item-id" type="hidden">
+
+      <label>
+        Name
+        <input id="field-name" type="text" required maxlength="120"
+               list="name-suggestions" autocomplete="off">
+      </label>
+
+      <label>
+        Quantity
+        <input id="field-quantity" type="text" maxlength="40" value="1" autocomplete="off">
+      </label>
+
+      <label>
+        Category
+        <input id="field-category" type="text" required maxlength="80"
+               list="category-suggestions" autocomplete="off">
+      </label>
+
+      <label>
+        Comment
+        <textarea id="field-comment" maxlength="500" rows="3"></textarea>
+      </label>
+
+      <p id="reuse-notice" class="notice" hidden></p>
+      <p id="form-error" class="error" role="alert" hidden></p>
+
+      <div class="dialog-actions">
+        <button id="cancel" type="button" class="secondary">Cancel</button>
+        <button type="submit" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <datalist id="name-suggestions"></datalist>
+  <datalist id="category-suggestions"></datalist>
+
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

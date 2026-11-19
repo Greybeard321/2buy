@@ -1,6 +1,6 @@
 # 2buy — Shared Shopping List
 
-Status: draft v0.8
+Status: v1.0 (implementation-ready)
 Last updated: 2026-11-19
 
 ## 1. Overview
@@ -133,7 +133,8 @@ Configuration (environment variables or one config file):
 
 | Setting | Purpose |
 | --- | --- |
-| `BASE_URL` | Public base URL used when printing user URLs |
+| `BASE_URL` | External `https://…` base URL used when printing user URLs (the address served by the reverse proxy) |
+| `BIND_ADDR` | Address/port for plain HTTP, e.g. `127.0.0.1:8080` (default) |
 | `DATABASE_PATH` | Where the SQLite database is stored |
 | `LIST_TITLE` | Optional heading shown in the UI |
 
@@ -147,7 +148,9 @@ Configuration (environment variables or one config file):
   hardening: encrypt the `token` column at rest with a key only the admin CLI can read.
 - Full tokens/URLs are printed only by explicit admin CLI commands. Never write them
   to application logs or share them except with the intended user.
-- Serve everything over **HTTPS**; redirect HTTP to HTTPS.
+- The app serves **plain HTTP** on `BIND_ADDR` (default `127.0.0.1:8080`). TLS and the
+  HTTP→HTTPS redirect are handled by an **existing external reverse proxy**; this is out
+  of scope for 2buy. `BASE_URL` must be the proxy's public `https://…` address.
 - Set `Referrer-Policy: no-referrer` and avoid third-party assets/analytics so the URL
   cannot leak via referrers or external logs.
 - Do not log full request URLs containing tokens (log a path template + username, or
@@ -212,9 +215,10 @@ One row per URL ever generated, so the exact URL can be reconstructed at any tim
 - A disabled item is rendered crossed out (line-through) and visually muted, including
   its category and comment. The toggle button then reads **Enable**. An enabled item
   has a **Disable** button.
-- Add form fields: name (required), quantity (default `1`), category (required),
-  comment (optional). Edit reuses the same form, prefilled with the item's values
-  (including its name), and allows **renaming** it. Editing preserves the item's
+- Add/edit form: a native `<dialog>` modal opened by an **Add item** button or an
+  item's **Edit** button. Fields: name (required), quantity (default `1`), category
+  (required), comment (optional). Edit mode is prefilled with the item's values
+  (including its name) and allows **renaming** it. Editing preserves the item's
   disabled state unless the user explicitly toggles it.
 - **Reuse notice**: if the entered name matches an existing item (case-insensitively),
   the form indicates
@@ -286,14 +290,23 @@ described in §3.3.
 - The URL is the only state a user needs to keep; the list itself lives on the server
   and survives reloads, device changes and server restarts.
 
-## 6. Proposed technical shape (not fixed)
+## 6. Technical stack (decided)
 
-- Backend: one small HTTP service (e.g. Python + stdlib/FastAPI, Go, or Node) using
-  SQLite for both the item list and the token registry. Single process, no external DB.
-- Frontend: plain HTML/CSS/vanilla JS served by the same process; `<datalist>` is enough
-  for autocomplete, no framework needed.
-- Deployment: run behind a reverse proxy that terminates TLS, or directly with TLS if
-  the runtime supports it. Back up the SQLite file.
+- **Backend**: Rust, synchronous, single binary:
+  - `tiny_http` for plain HTTP (no async runtime)
+  - `rusqlite` with the `bundled` SQLite feature (no runtime system dependency)
+  - `serde` / `serde_json` for API payloads
+  - `clap` for the admin CLI
+  - `rand` + `base64` for tokens from `OsRng`
+  - Timestamps via SQLite `CURRENT_TIMESTAMP`
+- **Frontend**: plain HTML, CSS and vanilla JavaScript served by the same binary.
+  No framework or build step; native `<select>`, `<datalist>`, `<input>` and
+  `document.cookie` cover all required UI behavior.
+- **Storage**: one SQLite file holding both `items` and `tokens`; WAL mode and a busy
+  timeout for concurrent requests. Back up the file (e.g. cron + `sqlite3 .backup`).
+- **Deployment**: low-end Raspberry Pi. Build natively on the Pi with
+  `cargo build --release`, strip the binary, install as a systemd service. No Docker.
+  The existing reverse proxy terminates TLS; 2buy binds to `127.0.0.1:8080`.
 
 ## 7. Example user flows
 
@@ -374,7 +387,6 @@ described in §3.3.
   server-side metadata.
 - Data and token registry survive server restarts (SQLite file).
 
-## 9. Open questions to settle before implementation
+## 9. Open questions
 
-1. **Deployment details** — public internet vs. home LAN only, and which
-   language/framework do you prefer for the server?
+None. All decisions are settled; the spec is ready for implementation.

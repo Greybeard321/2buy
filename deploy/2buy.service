@@ -1,0 +1,24 @@
+[Unit]
+Description=2buy shared shopping list
+After=network.target
+
+[Service]
+Type=simple
+User=2buy
+Group=2buy
+WorkingDirectory=/opt/2buy
+Environment=BIND_ADDR=127.0.0.1:8080
+Environment=DATABASE_PATH=/var/lib/2buy/2buy.sqlite3
+Environment=BASE_URL=https://shopping.example.com
+Environment=LIST_TITLE=Family supplies
+ExecStart=/usr/local/bin/2buy serve
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/2buy
+
+[Install]
+WantedBy=multi-user.target
