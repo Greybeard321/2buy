@@ -4,14 +4,26 @@ export function normalize(value) {
   return String(value ?? '').trim().toLocaleLowerCase();
 }
 
-export function apiBaseFromPath(path) {
+// The browser sees the public URL (e.g. /2buy/u/alice/token/), while nginx
+// strips the prefix before forwarding to 2buy. Find the /u/ marker anywhere in
+// the pathname so the prefix is preserved in API calls.
+function userRouteFromPath(path) {
   const clean = String(path || '').replace(/\/+$/, '');
-  return clean.replace(/^\/u\//, '/api/');
+  const marker = clean.lastIndexOf('/u/');
+  if (marker < 0) return null;
+  const parts = clean.slice(marker + 3).split('/').filter(Boolean);
+  if (parts.length < 2) return null;
+  return { prefix: clean.slice(0, marker), username: parts[0], token: parts[1] };
+}
+
+export function apiBaseFromPath(path) {
+  const route = userRouteFromPath(path);
+  if (!route) return String(path || '').replace(/\/+$/, '');
+  return `${route.prefix}/api/${route.username}/${route.token}`;
 }
 
 export function usernameFromPath(path) {
-  const parts = String(path || '').split('/').filter(Boolean);
-  return parts[0] === 'u' && parts.length >= 2 ? parts[1] : '';
+  return userRouteFromPath(path)?.username ?? '';
 }
 
 export function groupItems(items) {

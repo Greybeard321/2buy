@@ -55,6 +55,27 @@ sudo systemctl enable --now 2buy
 Point your existing reverse proxy at `127.0.0.1:8080` and set `BASE_URL` to the
 public HTTPS address it serves.
 
+### Serving under a URL prefix
+
+If 2buy is mounted at a subpath such as `/2buy`, include it in `BASE_URL` and let
+the reverse proxy strip it. 2buy then emits redirects with the prefix included,
+and the frontend keeps the prefix in its API calls:
+
+```sh
+export BASE_URL=https://shopping.example.com/2buy
+```
+
+```nginx
+location /2buy/ {
+    proxy_pass http://127.0.0.1:8080/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+No `proxy_redirect` or API rewrite rules are needed.
+
 ## Tests
 
 ```sh

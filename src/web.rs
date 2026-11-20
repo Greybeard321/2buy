@@ -237,7 +237,12 @@ fn handle(request: &mut Request, config: &Config) -> Result<Response<Bytes>, Box
         // Bookmark URLs have no trailing slash. Relative asset paths in index.html
         // must resolve under /u/<username>/<token>/, so canonicalize with a redirect.
         if route.tail.is_empty() && !url.ends_with('/') {
-            let location = format!("/u/{}/{}/", route.username, route.token);
+            let location = format!(
+                "{}/u/{}/{}/",
+                config.public_prefix(),
+                route.username,
+                route.token
+            );
             let mut response = text(302, "Redirecting to the canonical URL");
             response.add_header(
                 Header::from_bytes(&b"Location"[..], location.as_bytes())

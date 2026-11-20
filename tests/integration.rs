@@ -14,12 +14,25 @@ static COUNTER: AtomicUsize = AtomicUsize::new(0);
 struct TestEnv {
     dir: PathBuf,
     db: PathBuf,
+    /// Upstream address used for requests (what nginx proxies to).
     base: String,
+    /// BASE_URL value used by the CLI and for public redirects.
+    public_base: String,
     child: Option<Child>,
 }
 
 impl TestEnv {
     fn new() -> Self {
+        Self::build("")
+    }
+
+    /// Configure BASE_URL with a public prefix; requests still go straight to
+    /// the upstream, as they would after nginx strips the prefix.
+    fn with_prefix(prefix: &str) -> Self {
+        Self::build(prefix)
+    }
+
+    fn build(prefix: &str) -> Self {
         let id = COUNTER.fetch_add(1, Ordering::SeqCst);
         let dir = env::temp_dir().join(format!("2buy-test-{}-{id}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
@@ -30,13 +43,18 @@ impl TestEnv {
             listener.local_addr().unwrap().port()
         };
         let base = format!("http://127.0.0.1:{port}");
+        let public_base = if prefix.is_empty() {
+            base.clone()
+        } else {
+            format!("https://shopping.example.test{prefix}")
+        };
         let db = dir.join("test.sqlite3");
 
         let child = Command::new(env!("CARGO_BIN_EXE_2buy"))
             .arg("serve")
             .env("BIND_ADDR", format!("127.0.0.1:{port}"))
             .env("DATABASE_PATH", &db)
-            .env("BASE_URL", &base)
+            .env("BASE_URL", &public_base)
             .env("LIST_TITLE", "Family supplies")
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -47,6 +65,7 @@ impl TestEnv {
             dir,
             db,
             base,
+            public_base,
             child: Some(child),
         };
         for _ in 0..100 {
@@ -62,7 +81,7 @@ impl TestEnv {
         let output = Command::new(env!("CARGO_BIN_EXE_2buy"))
             .args(args)
             .env("DATABASE_PATH", &self.db)
-            .env("BASE_URL", &self.base)
+            .env("BASE_URL", &self.public_base)
             .output()
             .unwrap();
         assert!(
@@ -351,6 +370,43 @@ fn bookmark_url_without_trailing_slash_redirects_and_loads_app() {
     assert_eq!(status, 200);
     assert!(body.contains("app.mjs"));
     assert!(body.contains("id=\"add-item\""));
+}
+
+#[test]
+fn public_prefix_is_preserved_in_generated_urls_and_redirects() {
+    let env = TestEnv::with_prefix("/2buy");
+    let (token_id, url, token) = env.generate("alice");
+
+    assert!(
+        url.starts_with("https://shopping.example.test/2buy/u/alice/"),
+        "unexpected generated URL: {url}"
+    );
+    assert_eq!(env.cli(&["show-url", &token_id]).trim(), url);
+
+    // Simulate nginx stripping "/2buy" before proxying to the upstream.
+    let upstream_path = url
+        .strip_prefix("https://shopping.example.test/2buy")
+        .expect("generated URL must include the public prefix");
+    let upstream_url = format!("{}{}", env.base, upstream_path);
+
+    let agent = ureq::builder().redirects(0).build();
+    let (status, location) = match agent.get(&upstream_url).call() {
+        Ok(response) => (
+            response.status(),
+            response.header("Location").map(str::to_string),
+        ),
+        Err(ureq::Error::Status(code, response)) => (
+            code,
+            response.header("Location").map(str::to_string),
+        ),
+        Err(err) => panic!("request failed: {err}"),
+    };
+    let expected = format!("/2buy/u/alice/{token}/");
+    assert_eq!(status, 302);
+    assert_eq!(location.as_deref(), Some(expected.as_str()));
+
+    // API calls on the stripped path still work.
+    assert_eq!(http("GET", &env.api("alice", &token, "items"), None).0, 200);
 }
 
 #[test]

@@ -116,3 +116,23 @@ test('API path and username are derived from the bookmark URL', () => {
   assert.equal(usernameFromPath('/u/alice/secrettoken1234567890/'), 'alice');
   assert.equal(usernameFromPath('/api/alice/secrettoken1234567890/items'), '');
 });
+
+test('reverse-proxy prefix is preserved in API paths and usernames', () => {
+  assert.equal(
+    apiBaseFromPath('/2buy/u/alice/secrettoken1234567890/'),
+    '/2buy/api/alice/secrettoken1234567890'
+  );
+  assert.equal(
+    apiBaseFromPath('/2buy/u/alice/secrettoken1234567890'),
+    '/2buy/api/alice/secrettoken1234567890'
+  );
+  assert.equal(usernameFromPath('/2buy/u/alice/secrettoken1234567890/'), 'alice');
+
+  assert.equal(
+    apiBaseFromPath('/shop/2buy/u/bob/secrettoken1234567890/style.css'),
+    '/shop/2buy/api/bob/secrettoken1234567890'
+  );
+  assert.equal(usernameFromPath('/shop/2buy/u/bob/secrettoken1234567890/style.css'), 'bob');
+
+  assert.equal(usernameFromPath('/2buy/api/alice/secrettoken1234567890/items'), '');
+});
