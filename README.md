@@ -84,3 +84,7 @@ No `proxy_redirect` or API rewrite rules are needed.
 
 Runs Rust unit/integration tests (including a real server process) and the Node
 tests for the pure frontend logic.
+
+## License
+
+Released into the public domain under the Unlicense; see `UNLICENSE`.
